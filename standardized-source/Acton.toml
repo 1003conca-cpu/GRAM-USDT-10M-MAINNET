@@ -1,0 +1,41 @@
+[package]
+name = "gram-usdt-10m"
+description = "GRAM(USDT) Jetton on TON Mainnet"
+version = "1.0.0"
+license = "MIT"
+
+[toolchain]
+acton = "trunk"
+
+[contracts.JettonMinter]
+src = "contracts/JettonMinter.tolk"
+
+[[contracts.JettonMinter.depends]]
+name = "JettonWallet"
+kind = "embed_code"
+function = "jettonWalletCompiledCode"
+
+[contracts.JettonWallet]
+src = "contracts/JettonWallet.tolk"
+depends = []
+
+[lint]
+max-warnings = 0
+
+[lint.rules]
+dict-type-use = "allow"
+throw-requires-errors-enum = "allow"
+
+[fmt]
+width = 100
+ignore = []
+
+[build]
+output-fift = "build/fift"
+
+[import-mappings]
+acton = ".acton"
+contracts = "contracts"
+gen = "gen"
+tests = "tests"
+wrappers = "wrappers"
