@@ -3,6 +3,17 @@
 Jetton master:
 `EQDnJJ4GUHj84M1wJeMy5lQG5pmN4hZDI6OJy-7fKgg4VZSQ`
 
+## Project identity
+
+GRAM is an independent project utility token for internal project use, transfers, community rewards, testing and Web3 applications. It is not fiat money, not legal tender, not a stablecoin, and is not issued by, affiliated with, or backed by Tether.
+
+Current official identity:
+- Name: `GRAM`
+- Symbol: `GRAM`
+- Network: TON Mainnet
+
+A third-party cached/off-chain value `GRAM(USDT)` is outdated and conflicts with the current on-chain identity. Reviewers are requested to use the on-chain `GRAM / GRAM` identity and remove the stale `GRAM(USDT)` label.
+
 ## Deployed / local build hashes
 
 Jetton minter code hash:
@@ -33,9 +44,10 @@ The minter upgrade operation is NOT by itself evidence of a non-standard modific
 
 Do not replace the embedded wallet code in a live Jetton without a migration analysis. Jetton wallet addresses are derived from wallet code, owner and minter; changing the wallet code can derive different wallet addresses for existing holders.
 
-## Remediation path
+## Requested review
 
-1. Keep this exact source and build configuration public and reproducible.
-2. Submit the source/hash evidence for manual verification by indexers.
-3. If byte-for-byte recognition is required, prepare a separate migration plan based on the official compiled Jetton v2 wallet/minter and verify storage compatibility before any on-chain upgrade.
-4. No on-chain upgrade should be signed until existing holder wallet-address migration is proven safe.
+1. Correct stale third-party metadata from `GRAM(USDT)` to `GRAM`.
+2. Review any `SCAM`, blacklist, modified/custom-contract or trust-score classification against this public source and the deployed hashes.
+3. Treat GRAM as an independent project token, not as USDT or a representation of fiat money.
+4. Identify any remaining concrete technical remediation required for verification.
+5. Do not require removal of admin/mint capability unless a platform has an explicit policy that makes it necessary for this project token.
