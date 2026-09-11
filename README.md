@@ -2,9 +2,17 @@
 
 TON Mainnet Jetton source package for the deployed GRAM contract.
 
-## Deployed Jetton Master
+## Project identity
 
-`EQDnJJ4GUHj84M1wJeMy5lQG5pmN4hZDI6OJy-7fKgg4VZSQ`
+GRAM is an independent project utility token intended for internal project use, transfers, community rewards, testing and Web3 applications. It is not fiat money, not legal tender, not a stablecoin, and must not be represented as Tether USDT. It is not issued by, affiliated with, or backed by Tether.
+
+Official token identity:
+- Name: `GRAM`
+- Symbol: `GRAM`
+- Network: TON Mainnet
+- Jetton Master: `EQDnJJ4GUHj84M1wJeMy5lQG5pmN4hZDI6OJy-7fKgg4VZSQ`
+
+Any third-party cached/off-chain name such as `GRAM(USDT)` is outdated and does not represent the current on-chain token identity.
 
 ## Source basis
 
@@ -21,4 +29,4 @@ The compiler/build configuration is in `Acton.toml`. The Jetton Wallet code is e
 
 ## Verification note
 
-The deployed code is compiled from Tolk, so its bytecode/hash is not expected to equal the FunC reference byte-for-byte even where the behavior is intended to be equivalent. See `VERIFICATION.md` for the exact hashes and the current DYOR-relevant difference.
+The deployed code is compiled from Tolk, so its bytecode/hash is not expected to equal the FunC reference byte-for-byte even where the behavior is intended to be equivalent. See `VERIFICATION.md` for the exact hashes and current verification evidence.
