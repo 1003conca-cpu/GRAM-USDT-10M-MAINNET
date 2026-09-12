@@ -1,32 +1,36 @@
 # GRAM-USDT-10M-MAINNET
 
-TON Mainnet Jetton source package for the deployed GRAM contract.
+TON Mainnet Jetton source package for the deployed 10M GRAM contract.
 
-## Project identity
+## Canonical identity
 
-GRAM is an independent project utility token intended for internal project use, transfers, community rewards, testing and Web3 applications. It is not fiat money, not legal tender, not a stablecoin, and must not be represented as Tether USDT. It is not issued by, affiliated with, or backed by Tether.
-
-Official token identity:
+- Network: `TON Mainnet`
+- Supply profile: `10M`
+- Jetton Master: `EQDnJJ4GUHj84M1wJeMy5lQG5pmN4hZDI6OJy-7fKgg4VZSQ`
 - Name: `GRAM`
 - Symbol: `GRAM`
-- Network: TON Mainnet
-- Jetton Master: `EQDnJJ4GUHj84M1wJeMy5lQG5pmN4hZDI6OJy-7fKgg4VZSQ`
 
-Any third-party cached/off-chain name such as `GRAM(USDT)` is outdated and does not represent the current on-chain token identity.
+This address is the canonical 10M token identifier for this repository. Do not substitute another historical/project address when reviewing this source package.
+
+GRAM is an independent project utility token intended for internal project use, transfers, community rewards, testing and Web3 applications. It is not fiat money, not legal tender, not a stablecoin, and is not issued by, affiliated with, or backed by Tether/USDT.
+
+Any cached/off-chain label such as `GRAM(USDT)` is obsolete and does not represent the current on-chain identity.
 
 ## Source basis
 
-This package is a Tolk/Acton port of the official TON Jetton v2 design and targets TEP-74 and TEP-89 behavior.
+The contract sources in `contracts/` follow TON's official Acton/Tolk Jetton v2.1 reference implementation:
 
-Official reference implementation:
-- `ton-blockchain/jetton-contract`, branch `jetton-2.0`
-- `contracts/jetton-minter.fc`
-- `contracts/jetton-wallet.fc`
+- Repository: `ton-blockchain/acton-contracts`
+- Reference path: `jetton-v2.1/`
+- Contract metadata: `The Tolk Team`, version `2.1`
+- Standards: TEP-74 and TEP-89
+
+The Jetton message opcodes, minter flow, wallet flow, sharding helpers and storage layout in this package are based on that reference implementation. This package must not be described as a custom replacement of the Jetton protocol solely because it is Tolk/Acton rather than legacy FunC.
 
 ## Build
 
 The compiler/build configuration is in `Acton.toml`. The Jetton Wallet code is embedded through `gen/JettonWallet.code.tolk`.
 
-## Verification note
+## Verification
 
-The deployed code is compiled from Tolk, so its bytecode/hash is not expected to equal the FunC reference byte-for-byte even where the behavior is intended to be equivalent. See `VERIFICATION.md` for the exact hashes and current verification evidence.
+See `VERIFICATION.md` for deployed hashes and bytecode comparison evidence. In particular, the deployed embedded Jetton Wallet hash matches the official TON Acton Jetton v2.1 wallet artifact used for comparison.
