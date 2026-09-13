@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Xem số dư on-chain của GRAM 10M Mainnet trong ví TON/OKX Web3.">
+  <title>GRAM 10M · Số dư ví</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #080b12; color: #f5f7fb; }
+    main { width: min(92vw, 520px); padding: 28px; border: 1px solid #273047; border-radius: 22px; background: #101522; box-shadow: 0 20px 70px #0008; }
+    h1 { margin: 0 0 6px; font-size: 1.45rem; }
+    .sub { margin: 0 0 24px; color: #9aa6bd; font-size: .92rem; }
+    .card { padding: 20px; border-radius: 16px; background: #171e2d; }
+    .label { color: #9aa6bd; font-size: .82rem; }
+    .balance { margin: 8px 0; overflow-wrap: anywhere; font-size: clamp(1.65rem, 8vw, 2.45rem); font-weight: 750; }
+    .address { color: #c6cee0; font-family: ui-monospace, monospace; font-size: .86rem; }
+    .status { min-height: 22px; margin: 16px 0; color: #9aa6bd; }
+    .status[data-state="ok"] { color: #5ee6a8; }
+    .status[data-state="received"] { color: #75d8ff; }
+    .status[data-state="error"] { color: #ff7d8f; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    button { padding: 10px 14px; border: 1px solid #34405c; border-radius: 11px; background: #202a40; color: inherit; cursor: pointer; }
+    button:hover { background: #293650; }
+    .master { margin-top: 20px; color: #6f7b94; font-size: .72rem; overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>GRAM 10M Mainnet</h1>
+    <p class="sub">Số dư thực đã xác nhận trên blockchain TON</p>
+
+    <section class="card" aria-live="polite">
+      <div class="label">Số dư ví</div>
+      <div class="balance" data-gram-balance="wallet">-- GRAM</div>
+      <div class="address" data-gram-wallet-address>Chưa kết nối</div>
+    </section>
+
+    <div class="status" data-gram-sync-status>Đang khởi tạo…</div>
+    <div class="actions">
+      <div id="ton-connect"></div>
+      <button id="notify" type="button">Bật thông báo nhận tiền</button>
+      <button id="refresh" type="button">Cập nhật</button>
+    </div>
+
+    <div class="master">Jetton master: EQDnJJ4GUHj84M1wJeMy5lQG5pmN4hZDI6OJy-7fKgg4VZSQ</div>
+  </main>
+
+  <script src="https://unpkg.com/@tonconnect/ui@2.3.1/dist/tonconnect-ui.min.js"></script>
+  <script src="./balance-sync.js"></script>
+  <script>
+    const manifestUrl = new URL('./tonconnect-manifest.json', window.location.href).href;
+    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+      manifestUrl,
+      buttonRootId: 'ton-connect',
+    });
+
+    GramWalletBalance.configure({
+      getWalletAddress: () => tonConnectUI.account?.address || '',
+      refreshMs: 15000,
+    });
+
+    tonConnectUI.onStatusChange((wallet) => {
+      GramWalletBalance.setWalletAddress(wallet?.account?.address || '').catch(() => {});
+    });
+
+    document.querySelector('#refresh').addEventListener('click', () => {
+      GramWalletBalance.refresh('manual').catch(() => {});
+    });
+
+    document.querySelector('#notify').addEventListener('click', async () => {
+      const permission = await GramWalletBalance.enableNotifications();
+      document.querySelector('#notify').textContent = permission === 'granted'
+        ? 'Thông báo đã bật'
+        : 'Không bật được thông báo';
+    });
+  </script>
+</body>
+</html>
