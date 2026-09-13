@@ -20,6 +20,13 @@
  *     });
  *   </script>
  *
+ * Call from any deposit/withdraw flow:
+ *   const result = await GramBalanceSync.waitForCommand({
+ *     operationId: response.operationId,
+ *     type: 'deposit'
+ *   });
+ *   // result is returned only after the other side confirms and both balances reload.
+ *
  * The internal endpoint must return one of:
  *   { "balance": "123.45" }
  *   { "data": { "balance": "123.45" } }
@@ -168,6 +175,8 @@
       for (const [operationId, operation] of pendingOperations) {
         if (!operation.serverConfirmed) continue;
         pendingOperations.delete(operationId);
+        clearTimeout(operation.timeoutId);
+        operation.resolve?.(detail);
         document.dispatchEvent(new CustomEvent('gram:command-confirmed', {
           detail: { operationId, payload: operation.confirmation, balances: detail },
         }));
@@ -192,7 +201,10 @@
   function failOperation(operationId, payload = {}) {
     const id = String(operationId || '').trim();
     if (!id) return;
+    const operation = pendingOperations.get(id);
     pendingOperations.delete(id);
+    clearTimeout(operation?.timeoutId);
+    operation?.reject?.(new Error(payload.message || 'Command was not confirmed'));
     setStatus('error', payload.message || 'Lệnh không được xác nhận');
     document.dispatchEvent(new CustomEvent('gram:command-failed', {
       detail: { operationId: id, payload },
@@ -234,6 +246,7 @@
   function trackCommand(operation) {
     const id = String(operation?.operationId || operation?.id || '').trim();
     if (!id) throw new Error('operationId is required');
+    if (pendingOperations.has(id)) throw new Error(`Operation ${id} is already pending`);
     pendingOperations.set(id, { ...operation, startedAt: new Date().toISOString() });
     setStatus('pending', 'Đã gửi lệnh, đang chờ bên kia xác nhận');
     document.dispatchEvent(new CustomEvent('gram:command-pending', {
@@ -241,6 +254,28 @@
     }));
     // This deliberately does not alter either displayed balance.
     return id;
+  }
+
+  function waitForCommand(operation, options = {}) {
+    const id = trackCommand(operation);
+    const requestedTimeout = Number(options.timeoutMs ?? 120_000);
+    const timeoutMs = Number.isFinite(requestedTimeout)
+      ? Math.min(600_000, Math.max(10_000, requestedTimeout))
+      : 120_000;
+
+    return new Promise((resolve, reject) => {
+      const current = pendingOperations.get(id);
+      const timeoutId = setTimeout(() => {
+        pendingOperations.delete(id);
+        setStatus('waiting', 'Quá thời gian chờ, chưa có xác nhận từ bên kia');
+        const error = new Error(`Operation ${id} confirmation timed out`);
+        reject(error);
+        document.dispatchEvent(new CustomEvent('gram:command-timeout', {
+          detail: { operationId: id, timeoutMs },
+        }));
+      }, timeoutMs);
+      pendingOperations.set(id, { ...current, resolve, reject, timeoutId });
+    });
   }
 
   function schedule() {
@@ -275,6 +310,11 @@
     if (inFlight) inFlight.abort();
     if (eventSource) eventSource.close();
     eventSource = null;
+    for (const [operationId, operation] of pendingOperations) {
+      clearTimeout(operation.timeoutId);
+      operation.reject?.(new Error(`Operation ${operationId} stopped before confirmation`));
+    }
+    pendingOperations.clear();
   }
 
   document.addEventListener('visibilitychange', () => {
@@ -287,6 +327,7 @@
     MASTER_ADDRESS,
     configure,
     trackCommand,
+    waitForCommand,
     refresh,
     setWalletAddress,
     stop,
