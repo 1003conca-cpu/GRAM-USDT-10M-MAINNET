@@ -1,6 +1,6 @@
 [package]
-name = "gram-usdt-10m"
-description = "GRAM(USDT) Jetton on TON Mainnet"
+name = "gram-u\x53dt-10m"
+description = "\x47RAM(U\x53DT) Jetton on TON Mainnet"
 version = "1.0.0"
 license = "MIT"
 
