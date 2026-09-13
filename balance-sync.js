@@ -15,6 +15,7 @@
  *   <script>
  *     GramBalanceSync.configure({
  *       internalBalanceUrl: '/api/gram/balance',
+ *       eventStreamUrl: '/api/gram/events',
  *       getWalletAddress: () => tonConnectUI.account?.address
  *     });
  *   </script>
@@ -39,6 +40,7 @@
 
   let config = {
     internalBalanceUrl: '',
+    eventStreamUrl: '',
     getWalletAddress: null,
     refreshMs: DEFAULT_REFRESH_MS,
     tonApiBaseUrl: 'https://tonapi.io/v2',
@@ -46,7 +48,10 @@
   };
   let timer = null;
   let inFlight = null;
+  let eventSource = null;
   let lastWalletAddress = '';
+  let lastConfirmedSnapshot = null;
+  const pendingOperations = new Map();
 
   function normalizeNumber(value) {
     if (value === null || value === undefined || value === '') return null;
@@ -126,7 +131,7 @@
     return String(configured || tonConnectAddress || lastWalletAddress || '').trim();
   }
 
-  async function refresh() {
+  async function refresh(reason = 'scheduled') {
     if (inFlight) inFlight.abort();
     inFlight = new AbortController();
     const signal = inFlight.signal;
@@ -141,12 +146,6 @@
     const [inside, outside] = await Promise.allSettled([insidePromise, outsidePromise]);
     if (signal.aborted) return;
 
-    if (inside.status === 'fulfilled') updateText(SELECTORS.inside, `${inside.value} GRAM`);
-    else updateText(SELECTORS.inside, '--');
-
-    if (outside.status === 'fulfilled') updateText(SELECTORS.outside, `${outside.value} GRAM`);
-    else updateText(SELECTORS.outside, '--');
-
     const detail = {
       masterAddress: MASTER_ADDRESS,
       walletAddress: walletAddress || null,
@@ -156,12 +155,92 @@
         .filter((result) => result.status === 'rejected')
         .map((result) => result.reason?.message || String(result.reason)),
       syncedAt: new Date().toISOString(),
+      reason,
     };
 
     const complete = detail.errors.length === 0;
-    setStatus(complete ? 'ok' : 'partial', complete ? 'Đã đồng bộ' : 'Chưa đồng bộ đủ');
+    if (complete) {
+      // Commit both values together. Never show one newly-read side beside one stale side.
+      lastConfirmedSnapshot = detail;
+      updateText(SELECTORS.inside, `${detail.inside} GRAM`);
+      updateText(SELECTORS.outside, `${detail.outside} GRAM`);
+      setStatus('ok', 'Đã xác nhận và đồng bộ');
+      for (const [operationId, operation] of pendingOperations) {
+        if (!operation.serverConfirmed) continue;
+        pendingOperations.delete(operationId);
+        document.dispatchEvent(new CustomEvent('gram:command-confirmed', {
+          detail: { operationId, payload: operation.confirmation, balances: detail },
+        }));
+      }
+    } else {
+      // Keep the last fully confirmed pair instead of displaying an estimated balance.
+      setStatus('waiting', lastConfirmedSnapshot ? 'Đang chờ bên kia xác nhận' : 'Chưa có số dư đã xác nhận');
+    }
     document.dispatchEvent(new CustomEvent('gram:balance-update', { detail }));
     return detail;
+  }
+
+  async function confirmOperation(operationId, payload = {}) {
+    const id = String(operationId || '').trim();
+    if (!id) return;
+    const current = pendingOperations.get(id) || { operationId: id };
+    pendingOperations.set(id, { ...current, serverConfirmed: true, confirmation: payload });
+    setStatus('confirming', 'Bên kia đã báo, đang đọc lại hai số dư');
+    await refresh(`operation:${id}`);
+  }
+
+  function failOperation(operationId, payload = {}) {
+    const id = String(operationId || '').trim();
+    if (!id) return;
+    pendingOperations.delete(id);
+    setStatus('error', payload.message || 'Lệnh không được xác nhận');
+    document.dispatchEvent(new CustomEvent('gram:command-failed', {
+      detail: { operationId: id, payload },
+    }));
+  }
+
+  function handleServerEvent(event) {
+    let payload;
+    try {
+      payload = JSON.parse(event.data);
+    } catch {
+      return;
+    }
+    const type = payload.type || event.type;
+    const operationId = payload.operationId || payload.id;
+    if (type === 'operation.confirmed') {
+      confirmOperation(operationId, payload).catch(() => {});
+    } else if (type === 'operation.failed') {
+      failOperation(operationId, payload);
+    } else if (type === 'balance.changed') {
+      refresh('server:balance.changed').catch(() => {});
+    }
+  }
+
+  function connectEvents() {
+    if (eventSource) eventSource.close();
+    eventSource = null;
+    if (!config.eventStreamUrl || typeof EventSource === 'undefined') return;
+    eventSource = new EventSource(config.eventStreamUrl, { withCredentials: true });
+    eventSource.onmessage = handleServerEvent;
+    ['operation.confirmed', 'operation.failed', 'balance.changed'].forEach((type) => {
+      eventSource.addEventListener(type, handleServerEvent);
+    });
+    eventSource.onerror = () => {
+      setStatus('waiting', 'Mất kênh xác nhận, đang tự kiểm tra lại');
+    };
+  }
+
+  function trackCommand(operation) {
+    const id = String(operation?.operationId || operation?.id || '').trim();
+    if (!id) throw new Error('operationId is required');
+    pendingOperations.set(id, { ...operation, startedAt: new Date().toISOString() });
+    setStatus('pending', 'Đã gửi lệnh, đang chờ bên kia xác nhận');
+    document.dispatchEvent(new CustomEvent('gram:command-pending', {
+      detail: pendingOperations.get(id),
+    }));
+    // This deliberately does not alter either displayed balance.
+    return id;
   }
 
   function schedule() {
@@ -172,13 +251,17 @@
   }
 
   function configure(options = {}) {
+    const requestedRefreshMs = Number(options.refreshMs ?? config.refreshMs);
     config = {
       ...config,
       ...options,
-      refreshMs: Math.max(MIN_REFRESH_MS, Number(options.refreshMs ?? config.refreshMs)),
+      refreshMs: Number.isFinite(requestedRefreshMs)
+        ? Math.max(MIN_REFRESH_MS, requestedRefreshMs)
+        : DEFAULT_REFRESH_MS,
     };
+    connectEvents();
     schedule();
-    return refresh();
+    return refresh('configure');
   }
 
   function setWalletAddress(address) {
@@ -190,6 +273,8 @@
     clearInterval(timer);
     timer = null;
     if (inFlight) inFlight.abort();
+    if (eventSource) eventSource.close();
+    eventSource = null;
   }
 
   document.addEventListener('visibilitychange', () => {
@@ -201,6 +286,7 @@
   global.GramBalanceSync = Object.freeze({
     MASTER_ADDRESS,
     configure,
+    trackCommand,
     refresh,
     setWalletAddress,
     stop,
