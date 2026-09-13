@@ -1,0 +1,41 @@
+name: GRAM 10M Mainnet Verification
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - remediation/gram-10m-mainnet
+
+permissions:
+  contents: read
+
+jobs:
+  reproducible-verification:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pinned compiler
+        run: npm install --ignore-scripts --no-package-lock
+
+      - name: Run clean build, tests and verification gates
+        run: npm test
+
+      - name: Publish reproducibility artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gram-10m-mainnet-verification
+          path: |
+            build/gram-10m-mainnet.json
+            verified-source/gram-10m-mainnet/SHA256SUMS
+            verified-source/gram-10m-mainnet/PROVENANCE.md
+          if-no-files-found: warn

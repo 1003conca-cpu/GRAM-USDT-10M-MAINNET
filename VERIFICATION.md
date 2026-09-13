@@ -1,57 +1,39 @@
-# Verification evidence
+# GRAM 10M Mainnet Verification
 
-## Canonical token
+## Canonical target
 
-- Network: `TON Mainnet`
-- Supply profile: `10M`
-- Jetton master: `EQDnJJ4GUHj84M1wJeMy5lQG5pmN4hZDI6OJy-7fKgg4VZSQ`
-- Name: `GRAM`
-- Symbol: `GRAM`
+- Jetton Master: `EQDnJJ4GUHj84M1wJeMy5lQG5pmN4hZDI6OJy-7fKgg4VZSQ`
+- Network: TON Mainnet
+- Name/Symbol: `GRAM / GRAM`
+- Decimals: `9`
+- Observed supply: `10,000,010 GRAM`
+- Mintable: `true`
+- Admin raw: `0:fdb4789ea877c681cf6f85ac6bd67ab61495c92161d6320e23780b1e1af16633`
 
-This exact master address is the only 10M token addressed by this verification file.
+## Deployed code target
 
-GRAM is an independent project utility token for internal project use, transfers, community rewards, testing and Web3 applications. It is not fiat money, not legal tender, not a stablecoin, and is not issued by, affiliated with, or backed by Tether/USDT.
+- Expected code hash hex: `6bf8f48ca97d3fd9c8e553344efe7af030c322459e2ee2197a052162f1961bfb`
+- Expected code hash Base64: `a/j0jKl9P9nI5VM0Tv568DDDIkWeLuIZegUhYvGWG/s=`
+- Compiler: Tolk `1.4.0`
+- Source snapshot commit: `c03cd28500dfda162b430f37da01916e0803a5fe`
 
-A cached/off-chain value `GRAM(USDT)` is obsolete and conflicts with the current on-chain identity.
+The eight immutable source files are stored at `verified-source/gram-10m-mainnet/contracts/`. Their SHA-256 values are locked in `verified-source/gram-10m-mainnet/SHA256SUMS`.
 
-## Deployed hashes
+## Verification procedure
 
-Jetton minter code hash:
-`6bf8f48ca97d3fd9c8e553344efe7af030c322459e2ee2197a052162f1961bfb`
+From a fresh checkout:
 
-Embedded Jetton wallet code hash:
-`7bfa53bce90ce26cd368ec2989eba2bd15d286104742f0e04659f485a03012ba`
+```bash
+npm install --ignore-scripts --no-package-lock
+npm test
+```
 
-Base64:
-`e/pTvOkM4mzTaOwpieuivRXShhBHQvDgRln0haAwEro=`
+`npm test` performs a clean build with `@ton/tolk-js=1.4.0`, runs the repository tests, verifies all eight source checksums, verifies active naming/link rules, and compares the resulting code hash against the deployed target hash. Any mismatch exits non-zero.
 
-## Official TON Acton/Tolk Jetton v2.1 comparison
+## Source-verifier evidence boundary
 
-Reference repository: `ton-blockchain/acton-contracts`
-Reference path: `jetton-v2.1/`
-Reference revision used for source comparison: `7af1cea3cd0b990ae7b53a67b858c8cbd9da1e16`
+The immutable verifier snapshot is authoritative evidence for the source payload, compiler version and code hash. Its recorded `knownContractAddress` is not the GRAM 10M master address, so that field is not represented here as direct address-level proof for this Jetton Master. The repository instead requires an independent clean-build hash match.
 
-The project source uses the same Jetton v2.1 contract model and official message opcodes, including:
+## Supply truth
 
-- transfer: `0x0f8a7ea5`
-- internal transfer: `0x178d4519`
-- burn: `0x595f07bc`
-- burn notification: `0x7bdd97de`
-- mint: `0x642b7d07`
-- metadata update: `0xcb862902`
-
-A fresh build comparison of the official Acton Jetton v2.1 `JettonWallet` artifact produced the same wallet bytecode hash as the deployed embedded wallet:
-
-`7bfa53bce90ce26cd368ec2989eba2bd15d286104742f0e04659f485a03012ba`
-
-Therefore the deployed JettonWallet should not be classified as `modifiedContract` merely because its wallet bytecode is unrecognized by a stale allowlist. The prior comparison against the legacy FunC Jetton implementation was not the correct reference for this Tolk/Acton v2.1 package and has been removed from this document.
-
-The minter source in this repository follows the official Acton/Tolk Jetton v2.1 minter flow. The presence of admin-only metadata/admin/code-management operations is part of that reference design and, by itself, is not evidence of malicious behavior.
-
-## Requested platform review
-
-1. Use the exact canonical master `EQDnJJ4GUHj84M1wJeMy5lQG5pmN4hZDI6OJy-7fKgg4VZSQ`.
-2. Refresh cached metadata to `GRAM / GRAM` and remove obsolete `GRAM(USDT)` labeling.
-3. Re-evaluate `SCAM`, blacklist, modified/custom-contract and trust-score classifications against the official Acton/Tolk Jetton v2.1 reference and the hashes above.
-4. If a warning remains, identify the exact technical rule or upstream risk source responsible for it.
-5. Do not require removal of admin/mint capability unless the reviewing platform has an explicit policy requiring it for this project token.
+`10,000,000 GRAM` was the previously described initial amount. The verified current observed supply is `10,000,010 GRAM`; the contract remains `mintable: true`. This repository therefore makes no fixed-supply, hard-cap, immutable-supply or renounced-admin claim.

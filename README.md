@@ -1,36 +1,49 @@
-# GRAM-USDT-10M-MAINNET
+# GRAM 10M Mainnet
 
-TON Mainnet Jetton source package for the deployed 10M GRAM contract.
+Canonical repository identity: `gram-10m-mainnet`.
 
-## Canonical identity
+## Token identity
 
-- Network: `TON Mainnet`
-- Supply profile: `10M`
+- Network: TON Mainnet
 - Jetton Master: `EQDnJJ4GUHj84M1wJeMy5lQG5pmN4hZDI6OJy-7fKgg4VZSQ`
 - Name: `GRAM`
 - Symbol: `GRAM`
+- Decimals: `9`
+- Observed on-chain supply: `10,000,010 GRAM`
+- Mintable: `true`
 
-This address is the canonical 10M token identifier for this repository. Do not substitute another historical/project address when reviewing this source package.
+The observed supply is not described as a fixed supply or hard cap. Administrative capability remains present according to the verified deployed source and current getter state.
 
-GRAM is an independent project utility token intended for internal project use, transfers, community rewards, testing and Web3 applications. It is not fiat money, not legal tender, not a stablecoin, and is not issued by, affiliated with, or backed by Tether/USDT.
+## Verified deployed source
 
-Any cached/off-chain label such as `GRAM(USDT)` is obsolete and does not represent the current on-chain identity.
+The authoritative deployed-source snapshot is stored under:
 
-## Source basis
+`verified-source/gram-10m-mainnet/`
 
-The contract sources in `contracts/` follow TON's official Acton/Tolk Jetton v2.1 reference implementation:
+Provenance and per-file SHA-256 checksums are recorded in:
 
-- Repository: `ton-blockchain/acton-contracts`
-- Reference path: `jetton-v2.1/`
-- Contract metadata: `The Tolk Team`, version `2.1`
-- Standards: TEP-74 and TEP-89
+- [PROVENANCE.md](verified-source/gram-10m-mainnet/PROVENANCE.md)
+- [SHA256SUMS](verified-source/gram-10m-mainnet/SHA256SUMS)
 
-The Jetton message opcodes, minter flow, wallet flow, sharding helpers and storage layout in this package are based on that reference implementation. This package must not be described as a custom replacement of the Jetton protocol solely because it is Tolk/Acton rather than legacy FunC.
+Compiler: Tolk `1.4.0`, pinned exactly by `package.json`.
 
-## Build
+Expected deployed code hash:
 
-The compiler/build configuration is in `Acton.toml`. The Jetton Wallet code is embedded through `gen/JettonWallet.code.tolk`.
+`6bf8f48ca97d3fd9c8e553344efe7af030c322459e2ee2197a052162f1961bfb`
 
-## Verification
+## Reproducible verification
 
-See `VERIFICATION.md` for deployed hashes and bytecode comparison evidence. In particular, the deployed embedded Jetton Wallet hash matches the official TON Acton Jetton v2.1 wallet artifact used for comparison.
+```bash
+npm install --ignore-scripts --no-package-lock
+npm test
+```
+
+The test/verification pipeline fails if the source checksums, compiler version, build code hash, active naming rules, or internal documentation links are invalid.
+
+## Source separation
+
+The historical development source is retained only in `experimental/not-deployed/acton-v2.1/`. It is not part of the deployed-source verification build.
+
+## Handover
+
+See [VERIFICATION.md](VERIFICATION.md), [SECURITY.md](SECURITY.md), and [HANDOVER.md](HANDOVER.md).

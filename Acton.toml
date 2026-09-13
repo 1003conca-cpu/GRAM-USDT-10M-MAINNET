@@ -1,23 +1,11 @@
 [package]
-name = "gram-usdt-10m"
-description = "GRAM(USDT) Jetton on TON Mainnet"
+name = "gram-10m-mainnet"
+description = "GRAM 10M Mainnet reproducible verification package"
 version = "1.0.0"
 license = "MIT"
 
-[toolchain]
-acton = "trunk"
-
 [contracts.JettonMinter]
-src = "contracts/JettonMinter.tolk"
-
-[[contracts.JettonMinter.depends]]
-name = "JettonWallet"
-kind = "embed_code"
-function = "jettonWalletCompiledCode"
-
-[contracts.JettonWallet]
-src = "contracts/JettonWallet.tolk"
-depends = []
+src = "verified-source/gram-10m-mainnet/contracts/JettonMinter.tolk"
 
 [lint]
 max-warnings = 0
@@ -34,8 +22,7 @@ ignore = []
 output-fift = "build/fift"
 
 [import-mappings]
-acton = ".acton"
-contracts = "contracts"
-gen = "gen"
-tests = "tests"
-wrappers = "wrappers"
+verified = "verified-source/gram-10m-mainnet/contracts"
+
+# Authoritative reproducible compiler is pinned in package.json:
+# @ton/tolk-js = 1.4.0. This manifest intentionally contains no floating toolchain tag.
